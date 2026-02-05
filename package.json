@@ -54,6 +54,11 @@
     "webhook": "./packages/cli/bin/n8n webhook",
     "worker": "./packages/cli/bin/n8n worker"
   },
+  "dependencies": {
+    "n8n-nodes-whatsapp": "^1.2.3",
+    "n8n-nodes-mcp": "^0.4.0",
+    "n8n-nodes-openai-tools": "^0.6.1"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
     "@n8n/eslint-config": "workspace:*",
@@ -85,6 +90,7 @@
     "turbo": "2.5.4",
     "typescript": "*",
     "zx": "^8.1.4"
+    
   },
   "pnpm": {
     "onlyBuiltDependencies": [
