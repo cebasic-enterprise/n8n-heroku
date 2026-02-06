@@ -3,13 +3,11 @@
   "version": "2.0.0",
   "private": true,
   "engines": {
-    "node": ">=22.16",
-    "pnpm": ">=10.22.0"
+    "node": "18.x"
   },
   "packageManager": "pnpm@10.22.0",
   "scripts": {
     "prepare": "node scripts/prepare.mjs",
-    "preinstall": "node scripts/block-npm-install.js",
     "build": "turbo run build",
     "build:n8n": "node scripts/build-n8n.mjs",
     "build:deploy": "node scripts/build-n8n.mjs",
@@ -37,7 +35,7 @@
     "optimize-svg": "find ./packages -name '*.svg' ! -name 'pipedrive.svg' -print0 | xargs -0 -P16 -L20 npx svgo",
     "generate:third-party-licenses": "node scripts/generate-third-party-licenses.mjs",
     "setup-backend-module": "node scripts/ensure-zx.mjs && zx scripts/backend-module/setup.mjs",
-    "start": "run-script-os",
+    "start": "n8n start",
     "start:default": "cd packages/cli/bin && ./n8n",
     "start:tunnel": "./packages/cli/bin/n8n start --tunnel",
     "start:windows": "cd packages/cli/bin && n8n",
@@ -55,6 +53,7 @@
     "worker": "./packages/cli/bin/n8n worker"
   },
   "dependencies": {
+    "n8n": "^1.40.1",
     "n8n-nodes-whatsapp": "^1.2.3",
     "n8n-nodes-mcp": "^0.4.0",
     "n8n-nodes-openai-tools": "^0.6.1"
@@ -90,7 +89,7 @@
     "turbo": "2.5.4",
     "typescript": "*",
     "zx": "^8.1.4"
-    
+
   },
   "pnpm": {
     "onlyBuiltDependencies": [
