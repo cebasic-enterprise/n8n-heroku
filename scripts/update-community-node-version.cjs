@@ -44,6 +44,14 @@ async function main() {
 	await db.init();
 
 	const dataSource = Container.get(DataSource);
+	if (!dataSource.hasMetadata(InstalledPackages)) {
+		console.log(
+			'[community-node-update] InstalledPackages metadata not available, skipping DB update',
+		);
+		await db.close();
+		return;
+	}
+
 	const repo = dataSource.getRepository(InstalledPackages);
 	const nodesRepo = dataSource.getRepository(InstalledNodes);
 
