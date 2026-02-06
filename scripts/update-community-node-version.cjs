@@ -31,16 +31,29 @@ async function main() {
 	const {
 		InstalledPackages,
 	} = require('n8n/dist/modules/community-packages/installed-packages.entity');
+	const {
+		InstalledNodes,
+	} = require('n8n/dist/modules/community-packages/installed-nodes.entity');
 
 	const packageName =
 		process.env.N8N_BRAVE_PACKAGE_NAME || '@brave/n8n-nodes-brave-search';
 	const targetVersion = process.env.N8N_BRAVE_PACKAGE_VERSION || '1.0.28';
+	const mcpPackageName = process.env.N8N_MCP_PACKAGE_NAME || 'n8n-nodes-mcp';
 
 	const db = Container.get(DbConnection);
 	await db.init();
 
 	const dataSource = Container.get(DataSource);
 	const repo = dataSource.getRepository(InstalledPackages);
+	const nodesRepo = dataSource.getRepository(InstalledNodes);
+
+	// Remove MCP community package so it won't be reinstalled on startup
+	const existingMcp = await repo.findOneBy({ packageName: mcpPackageName });
+	if (existingMcp) {
+		await nodesRepo.delete({ package: { packageName: mcpPackageName } });
+		await repo.delete({ packageName: mcpPackageName });
+		console.log(`[community-node-update] Removed ${mcpPackageName} from DB`);
+	}
 
 	const existing = await repo.findOneBy({ packageName });
 
