@@ -55,6 +55,14 @@ async function installPackage(nodesDir, pkg, version) {
 	]);
 }
 
+function packageInstallPath(nodesDir, pkg) {
+	if (pkg.startsWith('@')) {
+		const [scope, name] = pkg.split('/');
+		return path.join(nodesDir, 'node_modules', scope, name);
+	}
+	return path.join(nodesDir, 'node_modules', pkg);
+}
+
 async function main() {
 	const nodesDir = getNodesDownloadDir();
 	const packageJsonPath = path.join(nodesDir, 'package.json');
@@ -68,6 +76,14 @@ async function main() {
 
 	for (const pkg of packages) {
 		const version = pkg === '@elevenlabs/n8n-nodes-elevenlabs' ? elevenlabsVersion : '';
+		const installPath = packageInstallPath(nodesDir, pkg);
+		try {
+			await access(path.join(installPath, 'package.json'));
+			console.log(`[community-build] ${pkg} already installed at ${installPath}`);
+			continue;
+		} catch {
+			// not installed yet
+		}
 		await installPackage(nodesDir, pkg, version);
 	}
 }
