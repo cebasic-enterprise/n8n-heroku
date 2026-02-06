@@ -6,6 +6,7 @@
     "node": "20.x"
   },
   "scripts": {
+    "heroku-postbuild": "node scripts/heroku-install-community-nodes.cjs",
     "build:n8n": "node scripts/build-n8n.mjs",
     "build:deploy": "node scripts/build-n8n.mjs",
     "build:docker": "node scripts/build-n8n.mjs && node scripts/dockerize-n8n.mjs",
@@ -50,7 +51,7 @@
     "worker": "./packages/cli/bin/n8n worker"
   },
   "dependencies": {
-    "n8n": "^1.40.1"
+    "n8n": "2.7.1-beta"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
