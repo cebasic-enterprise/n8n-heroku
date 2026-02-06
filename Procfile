@@ -1,1 +1,1 @@
-web: npm start
+web: N8N_COMMUNITY_PACKAGES_ENABLED=true N8N_REINSTALL_MISSING_PACKAGES=true npm start
