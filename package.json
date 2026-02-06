@@ -52,10 +52,7 @@
     "worker": "./packages/cli/bin/n8n worker"
   },
   "dependencies": {
-    "n8n": "^1.40.1",
-    "n8n-nodes-whatsapp": "latest",
-    "n8n-nodes-mcp": "latest",
-    "n8n-nodes-openai-tools": "latest"
+    "n8n": "^1.40.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
