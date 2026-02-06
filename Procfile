@@ -1,1 +1,1 @@
-web: N8N_PORT=$PORT N8N_LISTEN_ADDRESS=0.0.0.0 N8N_COMMUNITY_PACKAGES_ENABLED=true N8N_REINSTALL_MISSING_PACKAGES=true sh -c 'node scripts/update-community-node-version.cjs && n8n start'
+web: N8N_PORT=$PORT N8N_LISTEN_ADDRESS=0.0.0.0 NODE_OPTIONS=--max-old-space-size=384 N8N_COMMUNITY_PACKAGES_ENABLED=true N8N_REINSTALL_MISSING_PACKAGES=true sh -c 'node scripts/update-community-node-version.cjs && n8n start'
