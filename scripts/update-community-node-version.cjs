@@ -26,64 +26,80 @@ try {
 
 async function main() {
 	const { Container } = require('@n8n/di');
+	const { ModuleRegistry } = require('@n8n/backend-common');
 	const { DbConnection } = require('@n8n/db');
-	const { DataSource } = require('@n8n/typeorm');
 	const {
 		InstalledPackages,
 	} = require('n8n/dist/modules/community-packages/installed-packages.entity');
 	const {
 		InstalledNodes,
 	} = require('n8n/dist/modules/community-packages/installed-nodes.entity');
+	const {
+		CommunityPackagesService,
+	} = require('n8n/dist/modules/community-packages/community-packages.service');
 
 	const packageName =
 		process.env.N8N_BRAVE_PACKAGE_NAME || '@brave/n8n-nodes-brave-search';
 	const targetVersion = process.env.N8N_BRAVE_PACKAGE_VERSION || '1.0.28';
 	const mcpPackageName = process.env.N8N_MCP_PACKAGE_NAME || 'n8n-nodes-mcp';
+	const elevenlabsPackageName =
+		process.env.N8N_ELEVENLABS_PACKAGE_NAME || '@elevenlabs/n8n-nodes-elevenlabs';
+	const elevenlabsVersion = process.env.N8N_ELEVENLABS_PACKAGE_VERSION || undefined;
+
+	const moduleRegistry = Container.get(ModuleRegistry);
+	await moduleRegistry.loadModules();
 
 	const db = Container.get(DbConnection);
 	await db.init();
 
-	const dataSource = Container.get(DataSource);
-	if (!dataSource.hasMetadata(InstalledPackages)) {
-		console.log(
-			'[community-node-update] InstalledPackages metadata not available, skipping DB update',
-		);
-		await db.close();
-		return;
-	}
-
-	const repo = dataSource.getRepository(InstalledPackages);
-	const nodesRepo = dataSource.getRepository(InstalledNodes);
+	const communityPackagesService = Container.get(CommunityPackagesService);
+	await communityPackagesService.ensurePackageJson();
 
 	// Remove MCP community package so it won't be reinstalled on startup
-	const existingMcp = await repo.findOneBy({ packageName: mcpPackageName });
+	const existingMcp =
+		await communityPackagesService.findInstalledPackage(mcpPackageName);
 	if (existingMcp) {
-		await nodesRepo.delete({ package: { packageName: mcpPackageName } });
-		await repo.delete({ packageName: mcpPackageName });
+		await communityPackagesService.removePackage(mcpPackageName, existingMcp);
 		console.log(`[community-node-update] Removed ${mcpPackageName} from DB`);
 	}
 
-	const existing = await repo.findOneBy({ packageName });
-
+	const existing = await communityPackagesService.findInstalledPackage(packageName);
 	if (!existing) {
-		console.log(`[community-node-update] Package not found in DB: ${packageName}`);
-		await db.close();
-		return;
-	}
-
-	if (existing.installedVersion === targetVersion) {
+		await communityPackagesService.installPackage(packageName, targetVersion);
+		console.log(
+			`[community-node-update] Installed ${packageName} at version ${targetVersion}`,
+		);
+	} else if (existing.installedVersion !== targetVersion) {
+		await communityPackagesService.updatePackage(packageName, existing, targetVersion);
+		console.log(
+			`[community-node-update] Updated ${packageName} from ${existing.installedVersion} to ${targetVersion}`,
+		);
+	} else {
 		console.log(
 			`[community-node-update] ${packageName} already at version ${targetVersion}`,
 		);
-		await db.close();
-		return;
 	}
 
-	await repo.update({ packageName }, { installedVersion: targetVersion });
-
-	console.log(
-		`[community-node-update] Updated ${packageName} from ${existing.installedVersion} to ${targetVersion}`,
-	);
+	const elevenInstalled =
+		await communityPackagesService.findInstalledPackage(elevenlabsPackageName);
+	if (!elevenInstalled) {
+		await communityPackagesService.installPackage(elevenlabsPackageName, elevenlabsVersion);
+		console.log(
+			`[community-node-update] Installed ${elevenlabsPackageName}${elevenlabsVersion ? `@${elevenlabsVersion}` : ''}`,
+		);
+	} else if (
+		elevenlabsVersion &&
+		elevenInstalled.installedVersion !== elevenlabsVersion
+	) {
+		await communityPackagesService.updatePackage(
+			elevenlabsPackageName,
+			elevenInstalled,
+			elevenlabsVersion,
+		);
+		console.log(
+			`[community-node-update] Updated ${elevenlabsPackageName} from ${elevenInstalled.installedVersion} to ${elevenlabsVersion}`,
+		);
+	}
 
 	await db.close();
 }
@@ -91,5 +107,5 @@ async function main() {
 main().catch((error) => {
 	console.error('[community-node-update] Failed to update package version');
 	console.error(error);
-	process.exit(1);
+	process.exitCode = 0;
 });
